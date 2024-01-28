@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  MyVPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  MySubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: "10.0.0.0/24"
+
+  MyDBInstance:
+    Type: "AWS::RDS::DBInstance"
+    Properties:
+      DBInstanceIdentifier: "MyDBInstance"
+      AllocatedStorage: 20
+      DBInstanceClass: "db.t2.micro"
+      Engine: "mysql"
+      EngineVersion: "5.7"
+      MasterUsername: "admin"
+      MasterUserPassword: "adminpassword"
+      DBSubnetGroupName: !Ref MySubnet
+
+  MyEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      SubnetId: !Ref MySubnet
+      InstanceType: "t2.micro"
+      ImageId: "ami-0c55b159cbfafe1f0"
+      KeyName: "my-key-pair"
+
+  MyS3Bucket:
+    Type: "AWS::S3::Bucket"
+
+  MyLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "index.handler"
+      Role: !GetAtt MyIAMRole.Arn
+      FunctionName: "MyLambdaFunction"
+      Runtime: "nodejs14.x"
+      Code:
+        S3Bucket: !Ref MyS3Bucket
+        S3Key: "lambda-code.zip"
+
+  MyApiGateway:
+    Type: "AWS::ApiGateway::RestApi"
+    Properties:
+      Name: "MyApiGateway"
+      FailOnWarnings: "true"
+
+  MyRoute53HostedZone:
+    Type: "AWS::Route53::HostedZone"
+    Properties:
+      Name: "example.com."
+
+  MyLoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Subnets: [!Ref MySubnet]
+      SecurityGroups: [!GetAtt MyEC2Instance.SecurityGroups.0]
+
+  MyIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+
+  MyParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Type: "String"
+      Description: "Parameter for storing configuration"
+      Name: "/MyProject/Config/Parameter"
+      Value: "parameter-value"
+
+Outputs:
+  MyVPCOutput:
+    Value: !Ref MyVPC
+    Export:
+      Name: "MyVPC"
+
+  MyDBInstanceOutput:
+    Value: !GetAtt MyDBInstance.Endpoint.Address
+    Export:
+      Name: "MyDBInstanceEndpoint"
+
+  MyEC2InstanceOutput:
+    Value: !Ref MyEC2Instance
+    Export:
+      Name: "MyEC2Instance"
+
+  MyS3BucketOutput:
+    Value: !Ref MyS3Bucket
+    Export:
+      Name: "MyS3Bucket"
+
+  MyLambdaFunctionOutput:
+    Value: !Ref MyLambdaFunction
+    Export:
+      Name: "MyLambdaFunction"
+
+  MyApiGatewayOutput:
+    Value: !Ref MyApiGateway
+    Export:
+      Name: "MyApiGateway"
+
+  MyRoute53HostedZoneOutput:
+    Value: !Ref MyRoute53HostedZone
+    Export:
+      Name: "MyRoute53HostedZone"
+
+  MyLoadBalancerOutput:
+    Value: !Ref MyLoadBalancer
+    Export:
+      Name: "MyLoadBalancer"
