@@ -1,1 +1,1 @@
-![Architecture]([http://url/to/img.png](https://github.com/tanish0510/Dynamic-Resouce-Allocation-and-User-IP-Routing-AWS/blob/main/ss.jpeg?raw=true)https://github.com/tanish0510/Dynamic-Resouce-Allocation-and-User-IP-Routing-AWS/blob/main/ss.jpeg?raw=true)
+![Architecture](https://github.com/tanish0510/Dynamic-Resouce-Allocation-and-User-IP-Routing-AWS/blob/main/ss.jpeg)
